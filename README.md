@@ -66,8 +66,8 @@ pixel-game/
 
 ## 🎨 Screenshots
 
-| Start Screen | Gameplay | Victory |
-|:---:|:---:|:---:|
+|  Start Screen  |     Gameplay      | Victory  |
+| :------------: | :---------------: | :------: |
 | Pixel art menu | Dog chasing laser | You win! |
 
 ## 📝 License
