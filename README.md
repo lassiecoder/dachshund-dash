@@ -1,52 +1,52 @@
-# 🐕 Pixel Dog Chase 🔴
+# 🐕 Dachshund Dash 🎾
 
-A fun pixel art game where you control a laser pointer and try to escape from a cute dachshund! Built entirely with **Claude Opus 4.5** in VS Code in just a few minutes.
+A fun **pixel art game** featuring an adorable **dachshund** playing fetch! Built as a **JavaScript canvas game** that runs directly in your **browser** - no installation needed. Created entirely with **Claude Opus 4.5** in VS Code.
 
-![Pixel Dog Chase](https://img.shields.io/badge/Built%20with-Claude%20Opus%204.5-blueviolet)
+> 🎮 **Browser Game** | 🎨 **Pixel Art** | 🐶 **Dachshund** | ⚡ **JavaScript Canvas**
+
+![Dachshund Dash](https://img.shields.io/badge/Built%20with-Claude%20Opus%204.5-blueviolet)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
 
 ## 🎮 Play the Game
 
-**[Play Now on GitHub Pages](https://priyankasharma.github.io/pixel-game/)**
+**[Play Now on GitHub Pages](https://priyankasharma.github.io/dachshund-dash/)**
 
 ## 🎯 How to Play
 
-- Move your cursor to control the **red laser pointer**
-- A pixel art **dachshund** will chase the laser
-- Survive through **5 levels** (each level the dog gets faster!)
-- Each level lasts **10 seconds** (5 seconds for final level)
-- If the dog catches the laser, you lose!
-- Survive all levels to **WIN!**
+1. **Click and drag** the ball from the Fetch-O-Matic machine
+2. **Pull back** to set power (like a slingshot!)
+3. **Release** to throw the ball
+4. Watch your **dachshund run** to catch it
+5. The dog brings it **back to the machine**
+6. Score points based on **throw distance!**
 
 ## ✨ Features
 
-- 🎨 **Pixel Art Style** - Cute dachshund with walking animation
-- 🎵 **Sound Effects** - Level up chimes, game over sounds, victory fanfare
-- 📊 **5 Difficulty Levels** - Dog speed increases each level
-- 🚪 **Exit Option** - Pause and exit anytime during gameplay
+- 🎨 **Pixel Art Dachshund** - Cute animated wiener dog with walk cycle
+- 🎾 **Ball Physics** - Realistic bouncing and trajectory
+- 🏗️ **Fetch-O-Matic Machine** - Your ball launcher with power meter
+- 🎵 **Sound Effects** - Throw, catch, bounce, bark sounds
+- ⭐ **Scoring System** - Distance bonus + fetch completion bonus
 - 🖼️ **Retro UI** - Warm brown pixel art themed interface
 - 📱 **No Dependencies** - Pure HTML, CSS, and JavaScript
 
-## 🛠️ Built With AI in Minutes
+## 🛠️ Built With AI
 
-This entire game was built using **Claude Opus 4.5** in VS Code with GitHub Copilot. Here's what I asked for:
+This game was created using **Claude Opus 4.5** in VS Code. The conversation:
 
-1. "Create a pixel game where a dog chases my cursor laser pointer"
-2. "Make the dog look like a dachshund" (with reference image)
-3. "Add 5 levels with increasing speed"
-4. "Add sound effects"
-5. "Enhance the UI with pixel art style"
-6. "Add exit option"
+1. "Create a pixel game where a dog will run over my cursor"
+2. "Make the dog look like a dachshund"
+3. "Change the game - throw a ball and dog fetches it"
 
-**Total time: ~10 minutes** ⚡
+**Total development time: ~15 minutes** ⚡
 
 ## 🚀 Run Locally
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/pixel-game.git
+git clone https://github.com/YOUR_USERNAME/dachshund-dash.git
 
 # Open in browser
 open index.html
@@ -57,22 +57,31 @@ No build process needed - just open the HTML file!
 ## 📁 Project Structure
 
 ```
-pixel-game/
+dachshund-dash/
 ├── index.html    # Game HTML structure
 ├── style.css     # Pixel art styled CSS
-├── game.js       # Game logic and rendering
+├── game.js       # Game logic, physics, rendering
 └── README.md     # This file
 ```
 
-## 🎨 Screenshots
+## 🎮 Controls
 
-|  Start Screen  |     Gameplay      | Victory  |
-| :------------: | :---------------: | :------: |
-| Pixel art menu | Dog chasing laser | You win! |
+| Action       | How To                        |
+| ------------ | ----------------------------- |
+| Aim          | Click on ball and drag back   |
+| Adjust Power | Pull further = more power     |
+| Throw        | Release mouse button          |
+| Exit         | Click EXIT button (top right) |
 
 ## 📝 License
 
 MIT License - Feel free to use, modify, and share!
+
+---
+
+## 🏷️ Keywords
+
+`javascript` `game` `canvas` `pixel-art` `dachshund` `browser-game` `html5-game` `fetch-game` `dog-game` `retro-game` `sausage-dog` `wiener-dog`
 
 ---
 

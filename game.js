@@ -22,45 +22,38 @@ function playSound(type) {
   const now = audioCtx.currentTime;
 
   switch (type) {
-    case "levelUp":
-      // Rising triumphant sound
-      oscillator.type = "square";
-      oscillator.frequency.setValueAtTime(400, now);
-      oscillator.frequency.linearRampToValueAtTime(600, now + 0.1);
-      oscillator.frequency.linearRampToValueAtTime(800, now + 0.2);
+    case "throw":
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(300, now);
+      oscillator.frequency.linearRampToValueAtTime(600, now + 0.15);
       gainNode.gain.setValueAtTime(0.15, now);
-      gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
       oscillator.start(now);
-      oscillator.stop(now + 0.3);
+      oscillator.stop(now + 0.2);
       break;
 
-    case "gameOver":
-      // Sad descending sound
-      oscillator.type = "sawtooth";
-      oscillator.frequency.setValueAtTime(400, now);
-      oscillator.frequency.linearRampToValueAtTime(100, now + 0.5);
-      gainNode.gain.setValueAtTime(0.15, now);
-      gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+    case "catch":
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(600, now);
+      oscillator.frequency.linearRampToValueAtTime(400, now + 0.1);
+      gainNode.gain.setValueAtTime(0.12, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.15);
       oscillator.start(now);
-      oscillator.stop(now + 0.5);
+      oscillator.stop(now + 0.15);
       break;
 
-    case "victory":
-      // Happy victory fanfare
+    case "return":
       oscillator.type = "square";
-      oscillator.frequency.setValueAtTime(523, now); // C5
-      oscillator.frequency.setValueAtTime(659, now + 0.15); // E5
-      oscillator.frequency.setValueAtTime(784, now + 0.3); // G5
-      oscillator.frequency.setValueAtTime(1047, now + 0.45); // C6
-      gainNode.gain.setValueAtTime(0.15, now);
-      gainNode.gain.setValueAtTime(0.15, now + 0.5);
-      gainNode.gain.linearRampToValueAtTime(0, now + 0.7);
+      oscillator.frequency.setValueAtTime(523, now);
+      oscillator.frequency.setValueAtTime(659, now + 0.1);
+      oscillator.frequency.setValueAtTime(784, now + 0.2);
+      gainNode.gain.setValueAtTime(0.12, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.35);
       oscillator.start(now);
-      oscillator.stop(now + 0.7);
+      oscillator.stop(now + 0.35);
       break;
 
     case "bark":
-      // Quick bark sound
       oscillator.type = "sawtooth";
       oscillator.frequency.setValueAtTime(200, now);
       oscillator.frequency.linearRampToValueAtTime(150, now + 0.1);
@@ -70,14 +63,25 @@ function playSound(type) {
       oscillator.stop(now + 0.1);
       break;
 
-    case "tick":
-      // Subtle tick for each second
+    case "bounce":
       oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(880, now);
-      gainNode.gain.setValueAtTime(0.05, now);
-      gainNode.gain.linearRampToValueAtTime(0, now + 0.05);
+      oscillator.frequency.setValueAtTime(400, now);
+      oscillator.frequency.linearRampToValueAtTime(200, now + 0.08);
+      gainNode.gain.setValueAtTime(0.08, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.1);
       oscillator.start(now);
-      oscillator.stop(now + 0.05);
+      oscillator.stop(now + 0.1);
+      break;
+
+    case "perfect":
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(523, now);
+      oscillator.frequency.setValueAtTime(784, now + 0.1);
+      oscillator.frequency.setValueAtTime(1047, now + 0.2);
+      gainNode.gain.setValueAtTime(0.15, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+      oscillator.start(now);
+      oscillator.stop(now + 0.4);
       break;
   }
 }
@@ -89,49 +93,78 @@ canvas.height = 600;
 // Game state
 let gameRunning = false;
 let score = 0;
-let highScore = localStorage.getItem("dogChaseHighScore") || 0;
+let fetchCount = 0;
 let lastTime = 0;
-let scoreTimer = 0;
-let currentLevel = 1;
-let levelTimer = 0;
+let gamePaused = false;
 
-// Level settings - 5 levels, 10 seconds each, increasing speed
-const levels = [
-  { speed: 1.5, duration: 5 }, // Level 1 - slow
-  { speed: 2.5, duration: 5 }, // Level 2 - medium
-  { speed: 3.5, duration: 5 }, // Level 3 - fast
-  { speed: 4.5, duration: 5 }, // Level 4 - faster
-  { speed: 5.5, duration: 5 }, // Level 5 - very fast
-];
+// Machine/Launcher properties
+const machine = {
+  x: 80,
+  y: 450,
+  width: 100,
+  height: 120,
+  slotY: 420,
+};
 
-// Mouse/Laser position
-let laser = {
-  x: canvas.width / 2,
-  y: canvas.height / 2,
-  radius: 8,
-  glowRadius: 15,
+// Ball properties
+let ball = {
+  x: 130,
+  y: 420,
+  radius: 12,
+  vx: 0,
+  vy: 0,
+  gravity: 0.4,
+  bounce: 0.6,
+  friction: 0.99,
+  groundFriction: 0.92,
+  state: "ready",
+  color: "#e74c3c",
+};
+
+// Aiming state
+let aiming = {
+  active: false,
+  startX: 0,
+  startY: 0,
+  currentX: 0,
+  currentY: 0,
+  power: 0,
+  maxPower: 25,
 };
 
 // Dog properties
 let dog = {
-  x: 100,
-  y: 100,
-  width: 48,
-  height: 32,
-  speed: 2.5,
-  maxSpeed: 6,
+  x: 150,
+  y: 484,
+  width: 64,
+  height: 48,
+  speed: 5,
   frame: 0,
   frameTimer: 0,
-  frameInterval: 80, // Faster animation for lively feel
-  direction: 1, // 1 = right, -1 = left
-  catchRadius: 30,
+  frameInterval: 80,
+  direction: 1,
+  state: "idle",
+  hasBall: false,
+  targetX: 150,
 };
 
-// Pixel art dachshund frames (running animation) - matches reference image
+// Ground level
+const groundY = 520;
+
+// Clouds for animation
+let clouds = [
+  { x: 50, y: 80, scale: 0.7, speed: 0.25 },
+  { x: 150, y: 60, scale: 1, speed: 0.3 },
+  { x: 280, y: 120, scale: 0.5, speed: 0.15 },
+  { x: 400, y: 100, scale: 0.8, speed: 0.2 },
+  { x: 520, y: 70, scale: 0.9, speed: 0.35 },
+  { x: 600, y: 50, scale: 0.6, speed: 0.4 },
+  { x: 720, y: 90, scale: 0.75, speed: 0.28 },
+];
+
+// Pixel art dachshund frames
 const dogSprites = {
-  // Each frame is a 2D array representing pixels - dog facing RIGHT
   frames: [
-    // Frame 1 - standing
     [
       "       .....              ",
       "      .kkkkk.             ",
@@ -146,7 +179,6 @@ const dogSprites = {
       "       .bb.      .bb.     ",
       "       .bb.      .bb.     ",
     ],
-    // Frame 2 - walk (legs spread)
     [
       "       .....              ",
       "      .kkkkk.             ",
@@ -161,7 +193,6 @@ const dogSprites = {
       "      .bb.       .bb.     ",
       "     .bb.         .bb.    ",
     ],
-    // Frame 3 - walk (legs together)
     [
       "       .....              ",
       "      .kkkkk.             ",
@@ -176,7 +207,6 @@ const dogSprites = {
       "        .bbbb..bbbb.      ",
       "         .bb.  .bb.       ",
     ],
-    // Frame 4 - walk (opposite spread)
     [
       "       .....              ",
       "      .kkkkk.             ",
@@ -193,38 +223,94 @@ const dogSprites = {
     ],
   ],
   colors: {
-    k: "#3d3d3d", // Black/dark body
-    K: "#222222", // Darker (pupil)
-    b: "#c4875a", // Brown/tan (snout & paws)
-    W: "#FFFFFF", // White eye
-    t: "#3d3d3d", // Tail
-    ".": "#1a1a1a", // Outline
-    " ": null, // Transparent
+    k: "#3d3d3d",
+    K: "#222222",
+    b: "#c4875a",
+    W: "#FFFFFF",
+    t: "#3d3d3d",
+    ".": "#1a1a1a",
+    " ": null,
   },
 };
 
-// Laser trail particles
-let particles = [];
-let gamePaused = false;
-
 // Mouse tracking
+let mouseX = 0;
+let mouseY = 0;
+
 canvas.addEventListener("mousemove", (e) => {
   const rect = canvas.getBoundingClientRect();
-  laser.x = e.clientX - rect.left;
-  laser.y = e.clientY - rect.top;
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+
+  if (aiming.active) {
+    aiming.currentX = mouseX;
+    aiming.currentY = mouseY;
+
+    const dx = aiming.startX - aiming.currentX;
+    const dy = aiming.startY - aiming.currentY;
+    aiming.power = Math.min(Math.sqrt(dx * dx + dy * dy) / 10, aiming.maxPower);
+  }
 });
 
-// Keep laser in bounds
+canvas.addEventListener("mousedown", (e) => {
+  if (!gameRunning || gamePaused) return;
+  if (ball.state !== "ready") return;
+
+  const rect = canvas.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const clickY = e.clientY - rect.top;
+
+  const distToBall = Math.sqrt(
+    Math.pow(clickX - ball.x, 2) + Math.pow(clickY - ball.y, 2),
+  );
+
+  if (distToBall < 80) {
+    aiming.active = true;
+    aiming.startX = ball.x;
+    aiming.startY = ball.y;
+    aiming.currentX = clickX;
+    aiming.currentY = clickY;
+    aiming.power = 0;
+  }
+});
+
+canvas.addEventListener("mouseup", () => {
+  if (!gameRunning || gamePaused) return;
+  if (aiming.active && aiming.power > 2) {
+    throwBall();
+  }
+  aiming.active = false;
+});
+
 canvas.addEventListener("mouseleave", () => {
-  // Laser stays at last position
+  if (aiming.active && aiming.power > 2) {
+    throwBall();
+  }
+  aiming.active = false;
 });
 
-// Start button
+function throwBall() {
+  const dx = aiming.startX - aiming.currentX;
+  const dy = aiming.startY - aiming.currentY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance > 0) {
+    const power = Math.min(distance / 10, aiming.maxPower);
+    ball.vx = (dx / distance) * power;
+    ball.vy = (dy / distance) * power - 5;
+    ball.state = "flying";
+
+    playSound("throw");
+    playSound("bark");
+
+    dog.state = "chasing";
+  }
+}
+
+// Button listeners
 document.getElementById("start-btn").addEventListener("click", startGame);
 document.getElementById("restart-btn").addEventListener("click", startGame);
-document.getElementById("victory-btn").addEventListener("click", startGame);
 
-// Exit button functionality
 document.getElementById("exit-btn").addEventListener("click", () => {
   gamePaused = true;
   document.getElementById("exit-confirm").classList.remove("hidden");
@@ -247,42 +333,41 @@ function startGame() {
   initAudio();
   document.getElementById("start-screen").classList.add("hidden");
   document.getElementById("game-over").classList.add("hidden");
-  document.getElementById("victory").classList.add("hidden");
   document.getElementById("hud").classList.remove("hidden");
 
-  // Reset game state
   score = 0;
-  scoreTimer = 0;
-  currentLevel = 1;
-  levelTimer = 0;
-  dog.x = 100;
-  dog.y = 100;
-  dog.speed = levels[0].speed;
-  particles = [];
-  gameRunning = true;
+  fetchCount = 0;
 
-  document.getElementById("score").textContent = "0";
-  document.getElementById("level").textContent = "1";
-  document.getElementById("level-up").classList.add("hidden");
+  resetBall();
+  dog.x = 150;
+  dog.y = groundY - 36;
+  dog.state = "idle";
+  dog.hasBall = false;
+  dog.direction = 1;
+
+  gameRunning = true;
+  updateHUD();
 
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);
 }
 
-function showLevelUp(level) {
-  playSound("levelUp");
-  const levelUpEl = document.getElementById("level-up");
-  document.getElementById("level-up-num").textContent = level;
-  levelUpEl.classList.remove("hidden");
+function resetBall() {
+  ball.x = machine.x + machine.width / 2;
+  ball.y = machine.slotY;
+  ball.vx = 0;
+  ball.vy = 0;
+  ball.state = "ready";
+}
 
-  // Hide after 1.5 seconds
-  setTimeout(() => {
-    levelUpEl.classList.add("hidden");
-  }, 1500);
+function updateHUD() {
+  // Score display removed
+  // Fetches display removed
 }
 
 function gameLoop(currentTime) {
   if (!gameRunning) return;
+
   if (gamePaused) {
     requestAnimationFrame(gameLoop);
     return;
@@ -298,165 +383,379 @@ function gameLoop(currentTime) {
 }
 
 function update(deltaTime) {
-  // Update score timer
-  scoreTimer += deltaTime;
-  if (scoreTimer >= 1000) {
-    score++;
-    playSound("tick");
-    scoreTimer -= 1000;
-    document.getElementById("score").textContent = score;
+  // Update clouds
+  updateClouds();
 
-    // Update level timer and check for level up
-    levelTimer++;
-    if (currentLevel < 5 && levelTimer >= levels[currentLevel - 1].duration) {
-      levelTimer = 0;
-      currentLevel++;
-      dog.speed = levels[currentLevel - 1].speed;
-      document.getElementById("level").textContent = currentLevel;
-      showLevelUp(currentLevel);
+  // Ball physics
+  if (ball.state === "flying" || ball.state === "stopped") {
+    ball.vy += ball.gravity;
+    ball.vx *= ball.friction;
+    ball.vy *= ball.friction;
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+
+    // Ground collision
+    if (ball.y + ball.radius > groundY) {
+      ball.y = groundY - ball.radius;
+      ball.vy = -ball.vy * ball.bounce;
+      ball.vx *= ball.groundFriction;
+
+      if (Math.abs(ball.vy) > 2) {
+        playSound("bounce");
+      }
+
+      if (Math.abs(ball.vy) < 1 && Math.abs(ball.vx) < 0.5) {
+        ball.vy = 0;
+        ball.vx = 0;
+        if (ball.state === "flying") {
+          ball.state = "stopped";
+        }
+      }
     }
 
-    // Check for victory - survive 5 seconds in level 5
-    if (currentLevel === 5 && levelTimer >= 5) {
-      victory();
-      return;
+    // Wall collisions
+    if (ball.x - ball.radius < 0) {
+      ball.x = ball.radius;
+      ball.vx = -ball.vx * ball.bounce;
+    }
+    if (ball.x + ball.radius > canvas.width) {
+      ball.x = canvas.width - ball.radius;
+      ball.vx = -ball.vx * ball.bounce;
+    }
+
+    if (ball.y - ball.radius < 0) {
+      ball.y = ball.radius;
+      ball.vy = -ball.vy * ball.bounce;
     }
   }
 
-  // Update dog animation
-  dog.frameTimer += deltaTime;
-  if (dog.frameTimer >= dog.frameInterval) {
-    dog.frame = (dog.frame + 1) % dogSprites.frames.length;
-    dog.frameTimer = 0;
+  // Update dog
+  updateDog(deltaTime);
+
+  // Dog catches ball
+  if ((ball.state === "flying" || ball.state === "stopped") && !dog.hasBall) {
+    const distToBall = Math.sqrt(
+      Math.pow(dog.x + dog.width / 2 - ball.x, 2) +
+        Math.pow(dog.y + dog.height / 2 - ball.y, 2),
+    );
+
+    if (distToBall < 40) {
+      dog.hasBall = true;
+      ball.state = "returning";
+      dog.state = "returning";
+      playSound("catch");
+
+      const throwDistance = ball.x - machine.x;
+      const distanceScore = Math.floor(throwDistance / 10);
+      score += Math.max(distanceScore, 10);
+      updateHUD();
+    }
   }
 
-  // Move dog towards laser
-  const dx = laser.x - dog.x;
-  const dy = laser.y - dog.y;
-  const distance = Math.sqrt(dx * dx + dy * dy);
+  // Dog returning ball
+  if (dog.state === "returning" && dog.hasBall) {
+    if (dog.x < machine.x + machine.width + 20) {
+      dog.hasBall = false;
+      dog.state = "idle";
+      fetchCount++;
+      playSound("return");
 
-  if (distance > 0) {
-    dog.x += (dx / distance) * dog.speed;
-    dog.y += (dy / distance) * dog.speed;
-    dog.direction = dx > 0 ? 1 : -1;
-  }
+      score += 50;
+      updateHUD();
+      showFetchNotification();
 
-  // Add laser trail particles
-  if (Math.random() < 0.3) {
-    particles.push({
-      x: laser.x + (Math.random() - 0.5) * 10,
-      y: laser.y + (Math.random() - 0.5) * 10,
-      life: 1,
-      decay: 0.02 + Math.random() * 0.02,
-    });
-  }
-
-  // Update particles
-  particles = particles.filter((p) => {
-    p.life -= p.decay;
-    return p.life > 0;
-  });
-
-  // Check collision
-  const catchDist = Math.sqrt(
-    Math.pow(laser.x - dog.x, 2) + Math.pow(laser.y - dog.y, 2),
-  );
-
-  if (catchDist < dog.catchRadius) {
-    gameOver();
+      setTimeout(() => {
+        resetBall();
+      }, 500);
+    }
   }
 }
 
-function render() {
-  // Clear canvas with grass gradient
-  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, "#4a6741");
-  gradient.addColorStop(1, "#3d5a35");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+function showFetchNotification() {
+  const notification = document.getElementById("fetch-notify");
+  notification.textContent = `FETCH #${fetchCount}!`;
+  notification.classList.remove("hidden");
+  notification.classList.add("show");
 
-  // Draw grass/ground pattern
-  ctx.fillStyle = "#3a5a32";
-  for (let x = 0; x < canvas.width; x += 24) {
-    for (let y = 0; y < canvas.height; y += 24) {
-      if ((x + y) % 48 === 0) {
-        ctx.fillRect(x, y, 24, 24);
-      }
+  setTimeout(() => {
+    notification.classList.remove("show");
+    notification.classList.add("hidden");
+  }, 1000);
+}
+
+function updateDog(deltaTime) {
+  dog.frameTimer += deltaTime;
+  if (dog.frameTimer >= dog.frameInterval) {
+    dog.frameTimer = 0;
+    if (dog.state !== "idle") {
+      dog.frame = (dog.frame + 1) % 4;
     }
   }
 
-  // Draw particles
-  particles.forEach((p) => {
-    ctx.globalAlpha = p.life;
-    ctx.fillStyle = "#ff0000";
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-    ctx.fill();
+  if (dog.state === "chasing") {
+    dog.targetX = ball.x - dog.width / 2;
+
+    if (Math.abs(dog.x - dog.targetX) > 5) {
+      if (dog.x < dog.targetX) {
+        dog.x += dog.speed;
+        dog.direction = 1;
+      } else {
+        dog.x -= dog.speed;
+        dog.direction = -1;
+      }
+    }
+  } else if (dog.state === "returning") {
+    dog.targetX = machine.x + machine.width;
+
+    if (dog.x > dog.targetX) {
+      dog.x -= dog.speed;
+      dog.direction = -1;
+    }
+  }
+
+  dog.y = groundY - 36;
+  dog.x = Math.max(0, Math.min(canvas.width - dog.width, dog.x));
+}
+
+function render() {
+  // Sky
+  ctx.fillStyle = "#87CEEB";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Sun
+  ctx.beginPath();
+  ctx.arc(700, 80, 40, 0, Math.PI * 2);
+  ctx.fillStyle = "#f39c12";
+  ctx.fill();
+
+  // Clouds
+  clouds.forEach((cloud) => {
+    drawCloud(cloud.x, cloud.y, cloud.scale);
   });
-  ctx.globalAlpha = 1;
 
-  // Draw laser pointer with glow
-  ctx.shadowColor = "#ff0000";
-  ctx.shadowBlur = 20;
+  // Grass/ground
+  ctx.fillStyle = "#4a7c23";
+  ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
 
-  // Outer glow
-  ctx.fillStyle = "rgba(255, 0, 0, 0.3)";
-  ctx.beginPath();
-  ctx.arc(laser.x, laser.y, laser.glowRadius, 0, Math.PI * 2);
-  ctx.fill();
+  // Grass texture
+  ctx.fillStyle = "#5a9c33";
+  for (let x = 0; x < canvas.width; x += 20) {
+    ctx.fillRect(x, groundY, 10, 5);
+  }
 
-  // Inner laser dot
-  ctx.fillStyle = "#ff0000";
-  ctx.beginPath();
-  ctx.arc(laser.x, laser.y, laser.radius, 0, Math.PI * 2);
-  ctx.fill();
+  // Draw machine
+  drawMachine();
 
-  // Core bright center
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.arc(laser.x, laser.y, laser.radius / 2, 0, Math.PI * 2);
-  ctx.fill();
+  // Draw aiming line
+  if (aiming.active) {
+    drawAimingLine();
+  }
 
-  ctx.shadowBlur = 0;
+  // Draw ball
+  if (!dog.hasBall) {
+    drawBall();
+  }
 
   // Draw dog
   drawPixelDog();
+
+  // Draw ball in dog's mouth
+  if (dog.hasBall) {
+    const ballOffsetX = dog.direction === 1 ? -5 : dog.width + 5;
+    ctx.beginPath();
+    ctx.arc(dog.x + ballOffsetX, dog.y + 15, ball.radius * 0.8, 0, Math.PI * 2);
+    ctx.fillStyle = ball.color;
+    ctx.fill();
+    ctx.strokeStyle = "#c0392b";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Power meter
+  if (aiming.active) {
+    drawPowerMeter();
+  }
+
+  // Instructions hint
+  if (ball.state === "ready" && !aiming.active) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.font = "14px 'Press Start 2P', Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Click & drag ball to throw!", canvas.width / 2, 50);
+  }
+}
+
+function drawCloud(x, y, scale) {
+  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+  ctx.beginPath();
+  ctx.arc(x, y, 25 * scale, 0, Math.PI * 2);
+  ctx.arc(x + 25 * scale, y - 10 * scale, 20 * scale, 0, Math.PI * 2);
+  ctx.arc(x + 50 * scale, y, 25 * scale, 0, Math.PI * 2);
+  ctx.arc(x + 25 * scale, y + 10 * scale, 20 * scale, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function updateClouds() {
+  clouds.forEach((cloud) => {
+    cloud.x -= cloud.speed;
+    // Wrap around when cloud goes off left side
+    if (cloud.x + 75 * cloud.scale < 0) {
+      cloud.x = canvas.width + 50;
+    }
+  });
+}
+
+function drawMachine() {
+  // Machine shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.fillRect(machine.x + 10, groundY + 5, machine.width, 10);
+
+  // Machine body
+  ctx.fillStyle = "#5d6d7e";
+  ctx.fillRect(machine.x, machine.y, machine.width, machine.height);
+
+  // Machine top panel
+  ctx.fillStyle = "#85929e";
+  ctx.fillRect(machine.x + 5, machine.y + 5, machine.width - 10, 25);
+
+  // Ball slot
+  ctx.fillStyle = "#2c3e50";
+  ctx.beginPath();
+  ctx.arc(machine.x + machine.width / 2, machine.slotY, 25, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#34495e";
+  ctx.beginPath();
+  ctx.arc(machine.x + machine.width / 2, machine.slotY, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Machine label
+  ctx.fillStyle = "#ecf0f1";
+  ctx.font = "bold 8px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("FETCH-O-MATIC", machine.x + machine.width / 2, machine.y + 20);
+
+  // Decorative lights
+  ctx.fillStyle = ball.state === "ready" ? "#27ae60" : "#7f8c8d";
+  ctx.beginPath();
+  ctx.arc(machine.x + 20, machine.y + 45, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = ball.state === "flying" ? "#e74c3c" : "#7f8c8d";
+  ctx.beginPath();
+  ctx.arc(machine.x + machine.width - 20, machine.y + 45, 5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawBall() {
+  // Ball shadow
+  ctx.beginPath();
+  ctx.ellipse(ball.x, groundY + 5, ball.radius * 0.8, 4, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+  ctx.fill();
+
+  // Main ball
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+  ctx.fillStyle = ball.color;
+  ctx.fill();
+
+  ctx.strokeStyle = "#c0392b";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Ball highlight
+  ctx.beginPath();
+  ctx.arc(ball.x - 3, ball.y - 3, ball.radius * 0.3, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+  ctx.fill();
+}
+
+function drawAimingLine() {
+  const dx = aiming.startX - aiming.currentX;
+  const dy = aiming.startY - aiming.currentY;
+
+  // Trajectory preview
+  ctx.setLineDash([5, 5]);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(ball.x, ball.y);
+  ctx.lineTo(ball.x + dx * 2, ball.y + dy * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Pull line
+  ctx.strokeStyle = "#e74c3c";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(ball.x, ball.y);
+  ctx.lineTo(aiming.currentX, aiming.currentY);
+  ctx.stroke();
+
+  // Handle
+  ctx.beginPath();
+  ctx.arc(aiming.currentX, aiming.currentY, 8, 0, Math.PI * 2);
+  ctx.fillStyle = "#e74c3c";
+  ctx.fill();
+}
+
+function drawPowerMeter() {
+  const meterWidth = 100;
+  const meterHeight = 15;
+  const meterX = machine.x;
+  const meterY = machine.y - 30;
+
+  ctx.fillStyle = "#2c3e50";
+  ctx.fillRect(meterX, meterY, meterWidth, meterHeight);
+
+  const fillWidth = (aiming.power / aiming.maxPower) * meterWidth;
+  const powerColor =
+    aiming.power < aiming.maxPower * 0.5
+      ? "#27ae60"
+      : aiming.power < aiming.maxPower * 0.8
+        ? "#f39c12"
+        : "#e74c3c";
+  ctx.fillStyle = powerColor;
+  ctx.fillRect(meterX, meterY, fillWidth, meterHeight);
+
+  ctx.strokeStyle = "#ecf0f1";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(meterX, meterY, meterWidth, meterHeight);
+
+  ctx.fillStyle = "#ecf0f1";
+  ctx.font = "bold 10px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("POWER", meterX + meterWidth / 2, meterY - 5);
 }
 
 function drawPixelDog() {
   const sprite = dogSprites.frames[dog.frame];
-  const pixelSize = 4;
-  const spriteWidth = sprite[0].length * pixelSize;
-  const spriteHeight = sprite.length * pixelSize;
+  const pixelSize = 3;
 
-  ctx.save();
-
-  // Position dog centered
-  const drawX = dog.x - spriteWidth / 2;
-  const drawY = dog.y - spriteHeight / 2;
-
-  // Flip if moving right (sprite faces left by default)
-  if (dog.direction === 1) {
-    ctx.translate(dog.x, dog.y);
-    ctx.scale(-1, 1);
-    ctx.translate(-dog.x, -dog.y);
-  }
-
-  // Draw shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+  // Dog shadow
   ctx.beginPath();
   ctx.ellipse(
-    dog.x,
-    dog.y + spriteHeight / 2 + 5,
-    spriteWidth / 2,
-    8,
+    dog.x + dog.width / 2,
+    groundY + 5,
+    dog.width / 2,
+    6,
     0,
     0,
     Math.PI * 2,
   );
+  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
   ctx.fill();
 
-  // Draw each pixel
+  ctx.save();
+
+  if (dog.direction === 1) {
+    ctx.translate(dog.x + dog.width, dog.y);
+    ctx.scale(-1, 1);
+  } else {
+    ctx.translate(dog.x, dog.y);
+  }
+
   for (let row = 0; row < sprite.length; row++) {
     for (let col = 0; col < sprite[row].length; col++) {
       const char = sprite[row][col];
@@ -464,58 +763,12 @@ function drawPixelDog() {
 
       if (color) {
         ctx.fillStyle = color;
-        ctx.fillRect(
-          drawX + col * pixelSize,
-          drawY + row * pixelSize,
-          pixelSize,
-          pixelSize,
-        );
-
-        // Add pixel border for retro look
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(
-          drawX + col * pixelSize,
-          drawY + row * pixelSize,
-          pixelSize,
-          pixelSize,
-        );
+        ctx.fillRect(col * pixelSize, row * pixelSize, pixelSize, pixelSize);
       }
     }
   }
 
-  // Draw tongue when running (hanging from mouth)
-  if (dog.frame === 1 || dog.frame === 3) {
-    ctx.fillStyle = "#e85a6b";
-    ctx.fillRect(
-      drawX + 6 * pixelSize,
-      drawY + 7 * pixelSize,
-      pixelSize * 0.7,
-      pixelSize * 1.3,
-    );
-  }
-
   ctx.restore();
-}
-
-function gameOver() {
-  gameRunning = false;
-  playSound("bark");
-  setTimeout(() => playSound("gameOver"), 150);
-
-  document.getElementById("hud").classList.add("hidden");
-  document.getElementById("final-score").textContent = score;
-  document.getElementById("final-level").textContent = currentLevel;
-  document.getElementById("game-over").classList.remove("hidden");
-}
-
-function victory() {
-  gameRunning = false;
-  playSound("victory");
-
-  document.getElementById("hud").classList.add("hidden");
-  document.getElementById("victory-score").textContent = score;
-  document.getElementById("victory").classList.remove("hidden");
 }
 
 // Initial render
