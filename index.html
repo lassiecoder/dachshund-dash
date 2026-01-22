@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixel Dog Chase</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="game-container">
+      <canvas id="gameCanvas"></canvas>
+
+      <!-- HUD -->
+      <div id="hud" class="hidden">
+        <div id="score-display" class="hud-panel">
+          <span>TIME: <span id="score" class="value">0</span>s</span>
+        </div>
+        <div id="level-display" class="hud-panel">
+          <span>LEVEL: <span id="level" class="value">1</span>/5</span>
+        </div>
+        <button id="exit-btn">EXIT</button>
+      </div>
+
+      <!-- Level Up Notification -->
+      <div id="level-up" class="hidden">
+        <h2>LEVEL <span id="level-up-num">2</span>!</h2>
+      </div>
+
+      <!-- Exit Confirmation -->
+      <div id="exit-confirm" class="hidden">
+        <div class="modal-panel">
+          <h2>EXIT GAME?</h2>
+          <p>Your progress will be lost!</p>
+          <div class="btn-group">
+            <button id="exit-yes" class="pixel-btn pixel-btn-red">YES</button>
+            <button id="exit-no" class="pixel-btn pixel-btn-green">NO</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div id="game-over" class="modal-overlay hidden">
+        <div class="modal-panel">
+          <h1>GAME OVER</h1>
+          <p>The dog caught the laser!</p>
+          <p>Level: <span id="final-level" class="highlight">1</span></p>
+          <p>Time: <span id="final-score" class="highlight">0</span> seconds</p>
+          <div class="btn-group">
+            <button id="restart-btn" class="pixel-btn pixel-btn-orange">
+              RETRY
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Victory Screen -->
+      <div id="victory" class="modal-overlay hidden">
+        <div class="modal-panel">
+          <h1>YOU WIN!</h1>
+          <p>You escaped the dog!</p>
+          <p>
+            Total Time:
+            <span id="victory-score" class="highlight">0</span> seconds
+          </p>
+          <div class="btn-group">
+            <button id="victory-btn" class="pixel-btn pixel-btn-green">
+              PLAY AGAIN
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Start Screen -->
+      <div id="start-screen" class="modal-overlay">
+        <div class="modal-panel">
+          <h1>PIXEL DOG CHASE</h1>
+          <p>Move your cursor to control the laser</p>
+          <p>Don't let the dog catch it!</p>
+          <p>Survive all 5 levels to win!</p>
+          <div class="btn-group">
+            <button id="start-btn" class="pixel-btn pixel-btn-green">
+              PLAY
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="game.js"></script>
+  </body>
+</html>
