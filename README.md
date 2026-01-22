@@ -13,6 +13,8 @@ A fun **pixel art game** featuring an adorable **dachshund** playing fetch! Buil
 
 **[Play Now on GitHub Pages](https://dachshund-dash.vercel.app/)**
 
+![Image](https://github.com/user-attachments/assets/caec8d77-0317-44e4-ade5-70c9ba5e9c94)
+
 ## 🎯 How to Play
 
 1. **Click and drag** the ball from the Fetch-O-Matic machine
