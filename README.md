@@ -11,7 +11,7 @@ A fun **pixel art game** featuring an adorable **dachshund** playing fetch! Buil
 
 ## 🎮 Play the Game
 
-**[Play Now on GitHub Pages](https://priyankasharma.github.io/dachshund-dash/)**
+**[Play Now on GitHub Pages](https://lassiecoder.github.io/pixel-game/)**
 
 ## 🎯 How to Play
 
